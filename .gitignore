@@ -1,0 +1,16 @@
+# Python cache
+__pycache__/
+*.pyc
+
+# Virtual Environments
+venv/
+env/
+
+# Data and Models (Keep these local!)
+data/raw/
+data/processed/
+models/*.pt
+models/*.pth
+
+# OS generated files
+.DS_Store
