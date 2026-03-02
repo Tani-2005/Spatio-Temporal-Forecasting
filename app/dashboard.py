@@ -4,6 +4,7 @@ import numpy as np
 import plotly.graph_objects as go
 import plotly.express as px
 from datetime import datetime, timedelta
+import requests
 
 # ==========================================
 # 1. DATABASE & CONFIGURATION
@@ -19,23 +20,29 @@ COUNTRIES = {
 }
 
 # ==========================================
-# 2. LIVE DATA FETCHERS (Cached for Speed)
+# 2. TRUE LIVE DATA FETCHERS (10 Min Cache)
 # ==========================================
-@st.cache_data(ttl=3600)
+@st.cache_data(ttl=600)
 def get_live_telemetry(lat, lon, geo_code):
-    telemetry = {"ndvi": 0.35, "temp": 30.5, "rain": 12.0, "trends": 45} 
+    telemetry = {"ndvi": 0.35, "temp": 30.5, "rain": 0.0, "trends": 45} 
     try:
-        from src.live_data import fetch_latest_vegetation_index, fetch_live_weather_forecast, fetch_live_disease_trends
+        from src.live_data import fetch_latest_vegetation_index, fetch_live_disease_trends
         telemetry["ndvi"] = fetch_latest_vegetation_index(lat, lon)
-        weather_df = fetch_live_weather_forecast(lat, lon)
-        if weather_df is not None and not weather_df.empty:
-            telemetry["temp"] = weather_df['temperature_2m_max'].iloc[1]
-            telemetry["rain"] = weather_df['precipitation_sum'].iloc[1]
+        
+        weather_url = f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&current=temperature_2m,precipitation&timezone=auto"
+        weather_res = requests.get(weather_url, timeout=5).json()
+        
+        if "current" in weather_res:
+            telemetry["temp"] = weather_res["current"]["temperature_2m"]
+            telemetry["rain"] = weather_res["current"]["precipitation"]
+            
         trends_df = fetch_live_disease_trends("dengue", geo_code)
         if not trends_df.empty:
             telemetry["trends"] = int(trends_df.iloc[-1, 0]) 
-    except Exception:
-        pass 
+            
+    except Exception as e:
+        print(f"Live Telemetry Warning: {e}") 
+        
     return telemetry
 
 # ==========================================
@@ -58,7 +65,7 @@ intervention_efficacy = st.sidebar.slider("🛡️ Vector Control Intervention (
 # ==========================================
 future_dates = [(datetime.today() + timedelta(days=i)).strftime('%b %d') for i in range(14)]
 
-np.random.seed(42)
+np.random.seed(42) 
 base_trend = np.linspace(country_data["base_risk"], country_data["base_risk"] * 1.3, 14)
 base_preds = base_trend + np.random.normal(0, 8, 14)
 
@@ -75,15 +82,14 @@ with st.spinner(f"Establishing live satellite & API uplinks for {selected_countr
     live_data = get_live_telemetry(country_data["lat"], country_data["lon"], country_data["geo"])
 
 # ==========================================
-# 5. CHART FUNCTIONS (Including New 3D Visuals)
+# 5. CHART FUNCTIONS
 # ==========================================
 def plot_waterfall_attribution(base, temp, rain, intervention, final):
     fig = go.Figure(go.Waterfall(
         orientation="v", measure=["absolute", "relative", "relative", "relative", "total"],
         x=["Baseline Peak", "🌡️ Heat Impact", "🌧️ Rain Impact", "🛡️ Intervention", "Final Forecast"],
         y=[base, temp, rain, -intervention, final],
-        textposition="outside",
-        text=[f"{base}", f"+{temp}", f"+{rain}", f"-{intervention}", f"{final}"],
+        textposition="outside", text=[f"{base}", f"+{temp}", f"+{rain}", f"-{intervention}", f"{final}"],
         decreasing={"marker": {"color": "#2ecc71"}}, increasing={"marker": {"color": "#e74c3c"}}, totals={"marker": {"color": "#3498db"}}
     ))
     fig.update_layout(title="AI Forecast Attribution", template="plotly_dark", waterfallgap=0.3, margin=dict(t=40, b=0))
@@ -91,8 +97,7 @@ def plot_waterfall_attribution(base, temp, rain, intervention, final):
 
 def plot_threat_gauge(peak, capacity):
     fig = go.Figure(go.Indicator(
-        mode="gauge+number+delta", value=peak,
-        title={'text': "Hospital ICU Strain", 'font': {'size': 20}},
+        mode="gauge+number+delta", value=peak, title={'text': "Hospital ICU Strain", 'font': {'size': 20}},
         delta={'reference': capacity, 'increasing': {'color': "red"}, 'decreasing': {'color': "green"}},
         gauge={
             'axis': {'range': [None, capacity * 1.5], 'tickwidth': 1, 'tickcolor': "white"},
@@ -108,77 +113,65 @@ def plot_threat_gauge(peak, capacity):
     fig.update_layout(template="plotly_dark", height=280, margin=dict(t=40, b=0, l=0, r=0))
     return fig
 
-# --- NEW: 3D Surface Plot (Replaces 2D Heatmap) ---
 def plot_3d_spatiotemporal_surface(dates, peak_val):
     sub_regions = ["Northern District", "Southern District", "Coastal Region", "Urban Center", "Rural Highlands"]
     z_data = np.random.poisson(lam=50, size=(len(sub_regions), len(dates)))
-    # Create the simulated hotspot in the Urban Center
     z_data[3, :] = np.linspace(50, peak_val, len(dates)) + np.random.normal(0, 5, len(dates)) 
     
-    fig = go.Figure(data=[go.Surface(
-        z=z_data, x=dates, y=sub_regions, colorscale='Inferno',
-        hovertemplate='Date: %{x}<br>Region: %{y}<br>Cases: %{z}<extra></extra>'
-    )])
+    fig = go.Figure(data=[go.Surface(z=z_data, x=dates, y=sub_regions, colorscale='Inferno')])
     fig.update_layout(
         title="3D Node-Level Spatio-Temporal Spread",
-        scene=dict(
-            xaxis_title='Timeline',
-            yaxis_title='Geographic Nodes',
-            zaxis_title='Infection Intensity',
-            camera=dict(eye=dict(x=-1.5, y=-1.5, z=1.2)) # Sets default viewing angle
-        ),
+        scene=dict(xaxis_title='Timeline', yaxis_title='Geographic Nodes', zaxis_title='Infection Intensity', camera=dict(eye=dict(x=-1.5, y=-1.5, z=1.2))),
         template="plotly_dark", margin=dict(t=40, b=0, l=0, r=0)
     )
     return fig
 
-# --- NEW: 3D Scatter Plot (Environmental Drivers) ---
 def plot_3d_risk_clusters(temp_val, rain_val):
-    # Simulate a cluster of historical outbreaks based on climate
     np.random.seed(42)
     temps = np.random.normal(temp_val, 2, 80)
     rains = np.random.normal(rain_val, 15, 80)
     cases = np.maximum(0, (temps * 4) + (rains * 2) + np.random.normal(0, 20, 80))
     
-    fig = px.scatter_3d(
-        x=temps, y=rains, z=cases,
-        color=cases, size=np.maximum(1, cases),
-        color_continuous_scale='Turbo',
-        opacity=0.8,
-        title="Multidimensional Environmental Risk Clusters"
-    )
-    fig.update_layout(
-        scene=dict(
-            xaxis_title='Temperature (°C)',
-            yaxis_title='Precipitation (mm)',
-            zaxis_title='Historical Cases'
-        ),
-        template="plotly_dark", margin=dict(t=40, b=0, l=0, r=0)
-    )
+    fig = px.scatter_3d(x=temps, y=rains, z=cases, color=cases, size=np.maximum(1, cases), color_continuous_scale='Turbo', opacity=0.8, title="Multidimensional Environmental Risk Clusters")
+    fig.update_layout(scene=dict(xaxis_title='Temperature (°C)', yaxis_title='Precipitation (mm)', zaxis_title='Historical Cases'), template="plotly_dark", margin=dict(t=40, b=0, l=0, r=0))
     return fig
 
 # ==========================================
-# 6. UI LAYOUT: TOP SECTION (Executive View)
+# 6. UI LAYOUT: TOP SECTION & MAP
 # ==========================================
 st.title(f"📍 Epidemic Modeler: {selected_country}")
 
+# 1. Top Telemetry Row
 st.subheader("📡 Live Environmental Telemetry (API Feeds)")
 t1, t2, t3, t4, t5 = st.columns(5)
-
 np.random.seed(datetime.today().day) 
 current_cases = int(country_data["base_risk"] + np.random.normal(0, 12))
 
 t1.metric(label="🏥 Est. Current Cases", value=f"{current_cases}", help="Estimated cases based on most recent clinical reports.")
-t2.metric("🌡️ 24h Max Temp", f"{live_data['temp']} °C")
-t3.metric("🌧️ 24h Precipitation", f"{live_data['rain']} mm")
-t4.metric("🛰️ NASA NDVI", f"{live_data['ndvi']}", help="Vegetation index (-1 to 1). >0.5 is high risk.")
-t5.metric("🔍 Search Trend Index", f"{live_data['trends']} / 100", help="Live Google Search interest.")
+t2.metric(label="🌡️ Current Temp", value=f"{live_data['temp']} °C", help="Real-time observed temperature.")
+t3.metric(label="🌧️ Current Rain", value=f"{live_data['rain']} mm", help="Real-time observed precipitation falling right now.")
+t4.metric(label="🛰️ NASA NDVI", value=f"{live_data['ndvi']}", help="Vegetation index (-1 to 1). >0.5 is high risk.")
+t5.metric(label="🔍 Search Trend Index", value=f"{live_data['trends']} / 100", help="Live Google Search interest.")
 
 st.markdown("---")
 
-col_text, col_gauge, col_map = st.columns([1.5, 1, 1])
+# 2. Central Prominent Map (Full Width)
+st.subheader("🗺️ Global Spatio-Temporal Risk Map")
+df_map = pd.DataFrame({"lat": [country_data["lat"]], "lon": [country_data["lon"]], "cases": [scenario_peak]})
+fig_map = px.scatter_mapbox(df_map, lat="lat", lon="lon", size="cases", color_discrete_sequence=["red" if scenario_peak > country_data["capacity"] else "orange"], zoom=3.5, mapbox_style="carto-darkmatter")
+# Increased height to 450 to make it the absolute focal point of the screen
+fig_map.update_layout(margin=dict(l=0, r=0, t=0, b=0), height=450)
+st.plotly_chart(fig_map, use_container_width=True)
+
+st.markdown("---")
+
+# ==========================================
+# 7. UI LAYOUT: AI ANALYSIS & THREAT GAUGE
+# ==========================================
+st.subheader("💡 AI Scenario Analysis & Threat Assessment")
+col_text, col_gauge = st.columns([1.5, 1])
 
 with col_text:
-    st.subheader("💡 AI Scenario Analysis")
     delta = scenario_peak - base_peak
     if scenario_peak >= country_data["capacity"]:
         st.error(f"**CRITICAL SURGE:** The current scenario pushes peak cases to **{scenario_peak}**, exceeding the national ICU capacity of {country_data['capacity']}. Immediate vector control required.")
@@ -194,16 +187,10 @@ with col_text:
 with col_gauge:
     st.plotly_chart(plot_threat_gauge(scenario_peak, country_data["capacity"]), use_container_width=True)
 
-with col_map:
-    df_map = pd.DataFrame({"lat": [country_data["lat"]], "lon": [country_data["lon"]], "cases": [scenario_peak]})
-    fig_map = px.scatter_mapbox(df_map, lat="lat", lon="lon", size="cases", color_discrete_sequence=["red" if scenario_peak > country_data["capacity"] else "orange"], zoom=3, mapbox_style="carto-darkmatter")
-    fig_map.update_layout(margin=dict(l=0, r=0, t=0, b=0), height=280)
-    st.plotly_chart(fig_map, use_container_width=True)
-
 st.markdown("---")
 
 # ==========================================
-# 7. UI LAYOUT: MIDDLE SECTION (Attribution)
+# 8. UI LAYOUT: ATTRIBUTION & 3D ANALYTICS
 # ==========================================
 st.subheader("📊 Comparative Trajectory & Attribution")
 col_traj, col_waterfall = st.columns([2, 1.5])
@@ -221,16 +208,11 @@ with col_waterfall:
 
 st.markdown("---")
 
-# ==========================================
-# 8. UI LAYOUT: BOTTOM SECTION (3D Advanced Analytics)
-# ==========================================
 st.subheader("🧊 3D Advanced Data Analytics")
 col_3d_surface, col_3d_scatter = st.columns(2)
 
 with col_3d_surface:
-    # Render the 3D Spatio-Temporal Surface Plot
     st.plotly_chart(plot_3d_spatiotemporal_surface(future_dates, scenario_peak), use_container_width=True)
 
 with col_3d_scatter:
-    # Render the 3D Environmental Clusters Plot
     st.plotly_chart(plot_3d_risk_clusters(live_data['temp'], live_data['rain']), use_container_width=True)
