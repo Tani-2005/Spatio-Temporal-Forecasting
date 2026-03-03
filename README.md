@@ -72,3 +72,34 @@ Live APIs: PyTrends, Open-Meteo, Google Earth Engine API
 This reads incredibly well. It shows you understand the technical side (APIs, Spatio-Temporal logic) but also care deeply about the user experience.
 
 Are you ready to initialize your Git repository and push this masterpiece up to your GitHub
+
+---
+
+## 🔮 Future Roadmap (The Next Evolution)
+This engine is currently a V1 prototype. The architectural roadmap includes:
+* **Deep Learning Integration:** Replacing the current mathematical baseline with a full **Spatio-Temporal Graph Attention Network (STGAT)** or a **Temporal Fusion Transformer (TFT)** to learn complex, non-linear relationships between climate and outbreaks.
+* **Domain Adaptation:** Abstracting the core UI/UX and data pipeline to handle socio-political event streams, effectively transforming this epidemiological tool into a conflict escalation early-warning system.
+* **Automated Reporting:** Adding a cron-job pipeline to automatically generate and email localized PDF executive briefs when the model detects an anomaly that breaches hospital capacity constraints.
+
+---
+
+## 🧠 Technical Challenges Overcome
+* **API Rate Limiting & UI/UX Resilience:** Live APIs fail. To prevent dashboard crashes during a demo, I engineered a robust `try/except` fallback pipeline. If the Google Earth Engine or Open-Meteo APIs timeout, the UI silently falls back to moderate baseline metrics rather than throwing fatal exception errors.
+* **Dashboard State Management:** Re-rendering 3D Plotly maps every time a user moves a slider causes severe UI lag. By aggressively utilizing Streamlit's `@st.cache_data` decorator, API telemetry is cached for 10 minutes, making the "What-If" simulators lightning-fast.
+
+---
+
+## 📜 Acknowledgments & Data Sources
+This project would not be possible without the incredible open-source data provided by:
+* [Open-Meteo](https://open-meteo.com/) for real-time meteorological observation feeds.
+* [NASA Earth Data & Google Earth Engine](https://earthengine.google.com/) for the MODIS satellite telemetry.
+* [PyTrends](https://pypi.org/project/pytrends/) for syndromic surveillance access.
+
+---
+
+## 👨‍💻 Let's Connect
+I am a 3rd-year Information Science and Engineering student passionate about the intersection of Data Science, Machine Learning, and UI/UX design. I build intuitive interfaces that help humans understand complex mathematical models.
+
+* **LinkedIn:** https://www.linkedin.com/in/tanya-deep/
+
+> *"The best models are the ones people can actually use."*
