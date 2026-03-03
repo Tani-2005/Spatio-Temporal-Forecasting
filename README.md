@@ -98,7 +98,7 @@ This project would not be possible without the incredible open-source data provi
 ---
 
 ## 👨‍💻 Let's Connect
-I am a 3rd-year Information Science and Engineering student passionate about the intersection of Data Science, Machine Learning, and UI/UX design. I build intuitive interfaces that help humans understand complex mathematical models.
+I am a 3rd-year Information Science and Engineering student passionate about the intersection of Data Science, Machine Learning, and UI/UX design. 
 
 * **LinkedIn:** https://www.linkedin.com/in/tanya-deep/
 
