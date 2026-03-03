@@ -7,16 +7,61 @@ from datetime import datetime, timedelta
 import requests
 
 # ==========================================
-# 1. DATABASE & CONFIGURATION
+# 1. DATABASE & CONFIGURATION (Now with City Nodes)
 # ==========================================
 st.set_page_config(page_title="Epidemic Early Warning System", layout="wide", page_icon="🦠")
 
 COUNTRIES = {
-    "India": {"lat": 20.5937, "lon": 78.9629, "geo": "IN", "base_risk": 150, "vuln_score": 85, "capacity": 220},
-    "Brazil": {"lat": -14.2350, "lon": -51.9253, "geo": "BR", "base_risk": 200, "vuln_score": 92, "capacity": 280},
-    "Philippines": {"lat": 12.8797, "lon": 121.7740, "geo": "PH", "base_risk": 120, "vuln_score": 78, "capacity": 160},
-    "Nigeria": {"lat": 9.0820, "lon": 8.6753, "geo": "NG", "base_risk": 90, "vuln_score": 65, "capacity": 130},
-    "Mexico": {"lat": 23.6345, "lon": -102.5528, "geo": "MX", "base_risk": 80, "vuln_score": 55, "capacity": 140}
+    "India": {
+        "lat": 20.5937, "lon": 78.9629, "geo": "IN", "base_risk": 150, "vuln_score": 85, "capacity": 220,
+        "cities": [
+            {"name": "Mumbai", "lat": 19.0760, "lon": 72.8777, "base_risk": 180},
+            {"name": "Delhi", "lat": 28.7041, "lon": 77.1025, "base_risk": 140},
+            {"name": "Bengaluru", "lat": 12.9716, "lon": 77.5946, "base_risk": 160},
+            {"name": "Chennai", "lat": 13.0827, "lon": 80.2707, "base_risk": 150},
+            {"name": "Kolkata", "lat": 22.5726, "lon": 88.3639, "base_risk": 170}
+        ]
+    },
+    "Brazil": {
+        "lat": -14.2350, "lon": -51.9253, "geo": "BR", "base_risk": 200, "vuln_score": 92, "capacity": 280,
+        "cities": [
+            {"name": "São Paulo", "lat": -23.5505, "lon": -46.6333, "base_risk": 190},
+            {"name": "Rio de Janeiro", "lat": -22.9068, "lon": -43.1729, "base_risk": 220},
+            {"name": "Salvador", "lat": -12.9714, "lon": -38.5014, "base_risk": 180},
+            {"name": "Fortaleza", "lat": -3.7319, "lon": -38.5267, "base_risk": 170},
+            {"name": "Manaus", "lat": -3.1190, "lon": -60.0217, "base_risk": 240}
+        ]
+    },
+    "Philippines": {
+        "lat": 12.8797, "lon": 121.7740, "geo": "PH", "base_risk": 120, "vuln_score": 78, "capacity": 160,
+        "cities": [
+            {"name": "Manila", "lat": 14.5995, "lon": 120.9842, "base_risk": 150},
+            {"name": "Cebu City", "lat": 10.3157, "lon": 123.8854, "base_risk": 130},
+            {"name": "Davao City", "lat": 7.1907, "lon": 125.4553, "base_risk": 110},
+            {"name": "Quezon City", "lat": 14.6760, "lon": 121.0437, "base_risk": 140},
+            {"name": "Zamboanga", "lat": 6.9214, "lon": 122.0790, "base_risk": 100}
+        ]
+    },
+    "Nigeria": {
+        "lat": 9.0820, "lon": 8.6753, "geo": "NG", "base_risk": 90, "vuln_score": 65, "capacity": 130,
+        "cities": [
+            {"name": "Lagos", "lat": 6.5244, "lon": 3.3792, "base_risk": 120},
+            {"name": "Kano", "lat": 12.0022, "lon": 8.5920, "base_risk": 80},
+            {"name": "Ibadan", "lat": 7.3775, "lon": 3.9470, "base_risk": 95},
+            {"name": "Abuja", "lat": 9.0579, "lon": 7.4951, "base_risk": 75},
+            {"name": "Port Harcourt", "lat": 4.8156, "lon": 7.0498, "base_risk": 110}
+        ]
+    },
+    "Mexico": {
+        "lat": 23.6345, "lon": -102.5528, "geo": "MX", "base_risk": 80, "vuln_score": 55, "capacity": 140,
+        "cities": [
+            {"name": "Mexico City", "lat": 19.4326, "lon": -99.1332, "base_risk": 110},
+            {"name": "Guadalajara", "lat": 20.6597, "lon": -103.3496, "base_risk": 90},
+            {"name": "Monterrey", "lat": 25.6866, "lon": -100.3161, "base_risk": 75},
+            {"name": "Puebla", "lat": 19.0414, "lon": -98.2063, "base_risk": 85},
+            {"name": "Tijuana", "lat": 32.5149, "lon": -117.0382, "base_risk": 60}
+        ]
+    }
 }
 
 # ==========================================
@@ -41,7 +86,7 @@ def get_live_telemetry(lat, lon, geo_code):
             telemetry["trends"] = int(trends_df.iloc[-1, 0]) 
             
     except Exception as e:
-        print(f"Live Telemetry Warning: {e}") 
+        pass 
         
     return telemetry
 
@@ -54,22 +99,21 @@ country_data = COUNTRIES[selected_country]
 
 st.sidebar.markdown("---")
 st.sidebar.header("🎛️ 'What-If' Scenario Simulators")
-st.sidebar.caption("Adjust environmental and policy variables to simulate forecast outcomes.")
-
 temp_anomaly = st.sidebar.slider("🌡️ Temp Anomaly (°C)", min_value=-2.0, max_value=4.0, value=0.0, step=0.5)
 precip_multiplier = st.sidebar.slider("🌧️ Rainfall Multiplier", min_value=0.5, max_value=3.0, value=1.0, step=0.1)
 intervention_efficacy = st.sidebar.slider("🛡️ Vector Control Intervention (%)", min_value=0, max_value=80, value=0, step=10)
 
 # ==========================================
-# 4. DATA SIMULATION & MATH
+# 4. DATA SIMULATION & MATH (Country + City Level)
 # ==========================================
 future_dates = [(datetime.today() + timedelta(days=i)).strftime('%b %d') for i in range(14)]
-
 np.random.seed(42) 
+
+# Country Math
 base_trend = np.linspace(country_data["base_risk"], country_data["base_risk"] * 1.3, 14)
 base_preds = base_trend + np.random.normal(0, 8, 14)
-
 base_peak = int(max(base_preds))
+
 temp_impact = int(temp_anomaly * 15)
 rain_impact = int((precip_multiplier - 1.0) * 40)
 gross_peak = base_peak + temp_impact + rain_impact
@@ -77,6 +121,31 @@ intervention_impact_val = int(gross_peak * (intervention_efficacy / 100.0))
 
 scenario_peak = gross_peak - intervention_impact_val
 adjusted_preds = np.maximum(0, (base_preds + temp_impact + rain_impact) * (1.0 - (intervention_efficacy / 100.0)))
+
+# City Math (Calculate the localized impact for each city)
+city_records = []
+for city in country_data["cities"]:
+    c_gross = city["base_risk"] + temp_impact + rain_impact
+    c_peak = int(c_gross - (c_gross * (intervention_efficacy / 100.0)))
+    
+    # Determine Status
+    if c_peak > country_data["capacity"]:
+        status = "🔴 Critical Surge"
+    elif c_peak > country_data["capacity"] * 0.75:
+        status = "🟠 High Risk"
+    else:
+        status = "🟢 Stable"
+        
+    city_records.append({
+        "City": city["name"],
+        "Lat": city["lat"],
+        "Lon": city["lon"],
+        "Base Risk": city["base_risk"],
+        "Simulated Peak": c_peak,
+        "Status": status
+    })
+
+city_df = pd.DataFrame(city_records)
 
 with st.spinner(f"Establishing live satellite & API uplinks for {selected_country}..."):
     live_data = get_live_telemetry(country_data["lat"], country_data["lon"], country_data["geo"])
@@ -155,34 +224,48 @@ t5.metric(label="🔍 Search Trend Index", value=f"{live_data['trends']} / 100",
 
 st.markdown("---")
 
-# 2. Central Prominent Map (Full Width)
-st.subheader("🗺️ Global Spatio-Temporal Risk Map")
-df_map = pd.DataFrame({"lat": [country_data["lat"]], "lon": [country_data["lon"]], "cases": [scenario_peak]})
-fig_map = px.scatter_mapbox(df_map, lat="lat", lon="lon", size="cases", color_discrete_sequence=["red" if scenario_peak > country_data["capacity"] else "orange"], zoom=3.5, mapbox_style="carto-darkmatter")
-# Increased height to 450 to make it the absolute focal point of the screen
-fig_map.update_layout(margin=dict(l=0, r=0, t=0, b=0), height=450)
-st.plotly_chart(fig_map, use_container_width=True)
+# 2. Central Prominent Map & City Table
+st.subheader("🗺️ Spatio-Temporal City Node Analysis")
+col_map, col_table = st.columns([1.8, 1]) # Split layout: Map gets 65% width, Table gets 35%
+
+with col_map:
+    # Plotly Mapbox using the new City DataFrame
+    fig_map = px.scatter_mapbox(
+        city_df, lat="Lat", lon="Lon", size="Simulated Peak", color="Simulated Peak",
+        hover_name="City", hover_data={"Lat": False, "Lon": False, "Base Risk": True, "Status": True},
+        color_continuous_scale="Turbo", zoom=3.5, center={"lat": country_data["lat"], "lon": country_data["lon"]},
+        mapbox_style="carto-darkmatter"
+    )
+    fig_map.update_layout(margin=dict(l=0, r=0, t=0, b=0), height=400)
+    st.plotly_chart(fig_map, use_container_width=True)
+
+with col_table:
+    st.markdown("##### 📍 Top 5 Urban Risk Centers")
+    st.caption("Real-time simulated peak cases localized per city node.")
+    # Display the dataframe cleanly
+    display_df = city_df[["City", "Base Risk", "Simulated Peak", "Status"]].sort_values(by="Simulated Peak", ascending=False)
+    st.dataframe(display_df, use_container_width=True, hide_index=True, height=330)
 
 st.markdown("---")
 
 # ==========================================
 # 7. UI LAYOUT: AI ANALYSIS & THREAT GAUGE
 # ==========================================
-st.subheader("💡 AI Scenario Analysis & Threat Assessment")
+st.subheader("💡 AI Scenario Analysis & National Threat Assessment")
 col_text, col_gauge = st.columns([1.5, 1])
 
 with col_text:
     delta = scenario_peak - base_peak
     if scenario_peak >= country_data["capacity"]:
-        st.error(f"**CRITICAL SURGE:** The current scenario pushes peak cases to **{scenario_peak}**, exceeding the national ICU capacity of {country_data['capacity']}. Immediate vector control required.")
+        st.error(f"**CRITICAL SURGE:** The current scenario pushes national peak cases to **{scenario_peak}**, exceeding the national ICU capacity of {country_data['capacity']}. Immediate vector control required.")
     elif delta < -20:
         st.success(f"**INTERVENTION SUCCESS:** Simulated interventions suppress the outbreak, saving **{abs(delta)} individuals** from infection at the peak.")
     else:
         st.info(f"**STABLE:** Current simulators show a trajectory within standard hospital capacity.")
     
     m1, m2 = st.columns(2)
-    m1.metric("Baseline Peak (Do Nothing)", base_peak)
-    m2.metric("Scenario Peak", scenario_peak, delta=delta, delta_color="inverse")
+    m1.metric("National Baseline Peak (Do Nothing)", base_peak)
+    m2.metric("National Scenario Peak", scenario_peak, delta=delta, delta_color="inverse")
 
 with col_gauge:
     st.plotly_chart(plot_threat_gauge(scenario_peak, country_data["capacity"]), use_container_width=True)
