@@ -1,16 +1,16 @@
-# Python cache
+# Streamlit Secrets (CRITICAL)
+.streamlit/
+.streamlit/secrets.toml
+
+# Python Cache
 __pycache__/
-*.pyc
+*.py[cod]
+*$py.class
 
 # Virtual Environments
 venv/
 env/
+.env
 
-# Data and Models (Keep these local!)
-data/raw/
-data/processed/
-models/*.pt
-models/*.pth
-
-# OS generated files
+# MacOS junk
 .DS_Store
