@@ -1,4 +1,4 @@
-# 🌍 Global Spatio-Temporal Early Warning Engine
+#  Global Spatio-Temporal Early Warning Engine
 
 ![Python](https://img.shields.io/badge/Python-3.10+-blue.svg?style=for-the-badge&logo=python&logoColor=white)
 ![Streamlit](https://img.shields.io/badge/Streamlit-UI%2FUX-FF4B4B.svg?style=for-the-badge&logo=streamlit&logoColor=white)
@@ -10,19 +10,19 @@
 
 ---
 
-## ✨ Enterprise-Grade Features
+##  Enterprise-Grade Features
 
-* **🤖 GenAI Situation Reports (SITREPs):** Integrates Google's **Gemini 2.5 Flash** LLM to dynamically generate strict, military-style executive summaries based on live changing climate and capacity telemetry.
-* **🧠 Explainable AI (XAI) via SHAP:** Solves the "Black Box" problem. A live Random Forest surrogate model calculates localized feature attribution, rendering real-time **SHAP waterfall plots** so stakeholders know *exactly* why the AI predicted a specific threat level.
-* **📄 Automated Executive Briefings:** Features a one-click **PDF Generation Pipeline** (`fpdf2`) that instantly compiles live satellite metrics, AI predictions, and capacity constraints into a downloadable executive intelligence brief.
-* **🛰️ Live Multi-Modal Telemetry:** * **Meteorological:** Live weather observations via Open-Meteo.
+* ** GenAI Situation Reports (SITREPs):** Integrates Google's **Gemini 2.5 Flash** LLM to dynamically generate strict, military-style executive summaries based on live changing climate and capacity telemetry.
+* ** Explainable AI (XAI) via SHAP:** Solves the "Black Box" problem. A live Random Forest surrogate model calculates localized feature attribution, rendering real-time **SHAP waterfall plots** so stakeholders know *exactly* why the AI predicted a specific threat level.
+* ** Automated Executive Briefings:** Features a one-click **PDF Generation Pipeline** (`fpdf2`) that instantly compiles live satellite metrics, AI predictions, and capacity constraints into a downloadable executive intelligence brief.
+* ** Live Multi-Modal Telemetry:** * **Meteorological:** Live weather observations via Open-Meteo.
   * **Syndromic Surveillance:** Real-time search behavior tracking via Google Trends.
   * **Space Telemetry:** Live Normalized Difference Vegetation Index (NDVI) pulled directly from NASA's MODIS satellite via Google Earth Engine.
-* **🌍 Dynamic World Generation:** Utilizes a custom Python automation script to programmatically build a spatial database of 195+ countries and their top 5 highest-risk urban nodes.
+* ** Dynamic World Generation:** Utilizes a custom Python automation script to programmatically build a spatial database of 195+ countries and their top 5 highest-risk urban nodes.
 
 ---
 
-## 🏗️ Architecture & Domain Adaptation
+##  Architecture & Domain Adaptation
 
 While currently configured to track epidemiological vectors, the underlying Spatio-Temporal architecture and GenAI reporting pipeline are entirely domain-agnostic. 
 
@@ -30,7 +30,7 @@ By swapping out meteorological data for socio-political event streams, and repla
 
 ---
 
-## 🚀 Quick Start Guide (Local Deployment)
+##  Quick Start Guide (Local Deployment)
 
 **1. Clone the repository & Install Dependencies**
 ```bash
@@ -65,7 +65,7 @@ streamlit run app/dashboard.py
 
 ---
 
-## 📂 System File Architecture
+##  System File Architecture
 ```
 Plaintext
 ├── .streamlit/                 # Hidden configuration (API Keys)
