@@ -64,7 +64,13 @@ streamlit run app/dashboard.py
 ```
 
 ---
+## Visuals
 
+<img width="1898" height="1069" alt="image" src="https://github.com/user-attachments/assets/1433eb13-8040-4e16-92a7-69086c3459fa" />
+<img width="1899" height="1022" alt="image" src="https://github.com/user-attachments/assets/60db9e09-8093-43dc-a41e-a3a4b2021867" />
+<img width="1883" height="1013" alt="image" src="https://github.com/user-attachments/assets/604cad6a-c7c7-4193-ae0c-9e202911a220" />
+
+---
 ##  System File Architecture
 ```
 Plaintext
