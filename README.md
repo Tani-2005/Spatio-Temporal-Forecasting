@@ -12,13 +12,13 @@
 
 ##  Enterprise-Grade Features
 
-* ** GenAI Situation Reports (SITREPs):** Integrates Google's **Gemini 2.5 Flash** LLM to dynamically generate strict, military-style executive summaries based on live changing climate and capacity telemetry.
-* ** Explainable AI (XAI) via SHAP:** Solves the "Black Box" problem. A live Random Forest surrogate model calculates localized feature attribution, rendering real-time **SHAP waterfall plots** so stakeholders know *exactly* why the AI predicted a specific threat level.
-* ** Automated Executive Briefings:** Features a one-click **PDF Generation Pipeline** (`fpdf2`) that instantly compiles live satellite metrics, AI predictions, and capacity constraints into a downloadable executive intelligence brief.
-* ** Live Multi-Modal Telemetry:** * **Meteorological:** Live weather observations via Open-Meteo.
+* **GenAI Situation Reports (SITREPs):** Integrates Google's **Gemini 2.5 Flash** LLM to dynamically generate strict, military-style executive summaries based on live changing climate and capacity telemetry.
+* **Explainable AI (XAI) via SHAP:** Solves the "Black Box" problem. A live Random Forest surrogate model calculates localized feature attribution, rendering real-time **SHAP waterfall plots** so stakeholders know *exactly* why the AI predicted a specific threat level.
+* **Automated Executive Briefings:** Features a one-click **PDF Generation Pipeline** (`fpdf2`) that instantly compiles live satellite metrics, AI predictions, and capacity constraints into a downloadable executive intelligence brief.
+* **Live Multi-Modal Telemetry:** * **Meteorological:** Live weather observations via Open-Meteo.
   * **Syndromic Surveillance:** Real-time search behavior tracking via Google Trends.
   * **Space Telemetry:** Live Normalized Difference Vegetation Index (NDVI) pulled directly from NASA's MODIS satellite via Google Earth Engine.
-* ** Dynamic World Generation:** Utilizes a custom Python automation script to programmatically build a spatial database of 195+ countries and their top 5 highest-risk urban nodes.
+* **Dynamic World Generation:** Utilizes a custom Python automation script to programmatically build a spatial database of 195+ countries and their top 5 highest-risk urban nodes.
 
 ---
 
